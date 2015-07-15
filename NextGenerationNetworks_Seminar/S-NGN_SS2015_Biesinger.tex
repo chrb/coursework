@@ -41,7 +41,7 @@
 \myname{Biesinger Christoph}
 \mytitle{IP-Pakete "uber IEEE 802.15.4-Netzwerke}
 \myshorttitle{IP-Pakete "uber IEEE 802.15.4-Netzwerke}
-\mymatnr{xxxxxxx}
+\mymatnr{1350722}
 \mystudycourse{Masterstudiengang Informatik}
 \myreviewer{M.Sc. Dario Fanucchi}
 % ------------------------------------------------
@@ -367,7 +367,7 @@ Im folgenden werden drei Kommunikationsszenarien vorgestellt, welche das Stacked
     6LoWPAN Header beanspruchen zusammen ebenfalls nur 2 Bytes.
     \item Das n"achste Szenario beschreibt das erste fragmentierte Teilpaket eines gro"sen Paketes. Dabei wird vor dem Dispatch Header der
     Fragmentation Header auf dem Data Link Layer verwendet.
-    \item Das letzte Beispiel erl"autert ein Paket welches ``uber ein Mesh Netzwerk transportiert wird.
+    \item Das letzte Beispiel erl"autert ein Paket welches "uber ein Mesh Netzwerk transportiert wird.
 
 \end{itemize}
 % --------------------------------------
@@ -399,7 +399,7 @@ oder durch Informationen aus dem IEEE 802.15.4 Frame ersetzt werden(Payload Leng
         \item das HLIM-Feld (2 Bit), welches die Gr"o"se des Hop Limit angibt,
         \item das SAC bzw. DAC Feld (1 Bit), gibt die Kompression f"ur Source bzw. Destination Adresse an.
         \item sowie das SAM bzw. DAM Feld (2 Bit), erl"autert die L"ange der Adressen an.
-        (16-Bit Adressen weren durch die Kombination ``10" angegeben)
+        (16-Bit Adressen weren durch die Kombination ``10'' angegeben)
     \end{itemize}
 \end{description}
 
@@ -414,9 +414,9 @@ bei der Reichweite (Anzahl der Hops) des IP-Pakets aufzeigen.
 \begin{description}
     \item[Kommunikation "uber einen (1) Hop] bezeichnet den einfachsten Fall und entspricht dem ``Best Case" f"ur
     LOWPAN\_IPHC Kompression. Da der Suffix der IPv6-Adresse der MAC-Adresse auf dem Data Link Layer entspricht, wird
-    diese Information vom IEEE 802.15.4 Frame ``ubernommen. Der Pr"afix kann bei einer Link Local-Adresse sogar komplett
-    weggelassen werden, womit von dem IPv6 Header nur 3 Bytes ``ubrigbleiben, 1 Byte Dispatch Header, 1 Byte LOWPAN\_IPHC Encoding Feld
-    und 1 Byte f"ur das Hop Limit Feld, welches als einziges ohne ``Anderungen ``bernommen wird. Damit wurden 37 Byte des
+    diese Information vom IEEE 802.15.4 Frame "ubernommen. Der Pr"afix kann bei einer Link Local-Adresse sogar komplett
+    weggelassen werden, womit von dem IPv6 Header nur 3 Bytes "ubrigbleiben, 1 Byte Dispatch Header, 1 Byte LOWPAN\_IPHC Encoding Feld
+    und 1 Byte f"ur das Hop Limit Feld, welches als einziges ohne "Anderungen "bernommen wird. Damit wurden 37 Byte des
     urspr"unglichen IPv6 Header gespart, dies entspricht eine Kompression von 92,5 Prozent.
 
     \item[Kommunikation "uber mehrere (\textgreater 1) Hops] unterscheidet sich zur Kommunikation ``ber einen Hop nur anhand der MAC-Adressen.
@@ -500,7 +500,7 @@ Kategorien eingeteilt werden.
     auf dem Data Link Layer als als IP Router betrachtet, womit ein Hop auf dem Data Link Layer einem
     Hop auf dem Network Layer entspricht, daher spiegelt diese einzige Verbindung die Reichweite der IPv6 Verbindung dar.
     Damit k"onnen nun die Dienste von IPv6 bzgl. Routing, wie Routing Tabellen und Hop-by-Hop Optionen
-    angewendet werden. Der Adaptions Layer von 6LoWPAN ``ubernimmt in diesem Fall das Mapping zwischen
+    angewendet werden. Der Adaptions Layer von 6LoWPAN "ubernimmt in diesem Fall das Mapping zwischen
     den beiden Layern und sorgt haupts"achlich f"ur das Fragmentieren und Zusammensetzen der Pakete.
     Zusammengefasst besteht das Route Over Netzwerk aus mehreren sich "uberlappenden Link Local Bereichen,
     wobei jeder Knoten seinen eigenen Link Local Bereich, mit in direkten Verbindung stehenden Nachbarn, besitzt.
@@ -563,7 +563,7 @@ Die Knoten eines DODAG operieren dadurch als IPv6 Router, wobei ein Knoten, welc
 Abstraktionsebene von IPv6 an ein anderes Subnetz grenzt, innerhalb des DODAG als Root-Knoten
 dient.
 
-Die Anfoderungen entsprechen dabei ausgew"ahlten Metriken, wie ``Ubertragungszeit, Verz"ogerung oder Jitter,
+Die Anfoderungen entsprechen dabei ausgew"ahlten Metriken, wie "Ubertragungszeit, Verz"ogerung oder Jitter,
 wobei die Beschr"ankungen bestimmte Vorgaben vermeiden, z.B. die Vermeidung Nicht-Verschl"usselter Knoten oder
 Batterie-betriebener Knoten.
 
@@ -636,7 +636,7 @@ gilt als Grundlage 802.15.4 und darauf aufbauend unabh"angige Standards, wie 6Lo
  das Routingprotkoll RPL und IPv6 Anwendungen wie Neighbor Discovery sowie Transportprotokolle.
  Durch diese breite Verwendung von Standards wie die Interoperablit"at mit anderen Standards gew"ahrleistet
  und der Fehler eines abgeschlossenen Systems von ZigBee wird nicht wiederholt.
- Aufbauend auf dieser ``super-specification'' \ref{zigbeeip} folgt der ZigBee Smart Energy V2.0 Layer
+ Aufbauend auf dieser ``super-specification'' \cite{zigbeeip} folgt der ZigBee Smart Energy V2.0 Layer
  ein ip-basiertes Protokoll zur Kontrolle, Monitoring und dem Informationsaustausch von
  Anwendungen. Diese Anwendungen sind teil des urspr"ungliche ZigBee Application Framework
  mitsamt der ZigBee Profiles.
@@ -685,6 +685,7 @@ sich an 6LoWPAN anpassen.
 % ------------------------------------------------
 % .... Literaturverzeichnis
 % -------------------------
+\newpage
 \printbibliography
 % ------------------------------------------------
 \end{document}
