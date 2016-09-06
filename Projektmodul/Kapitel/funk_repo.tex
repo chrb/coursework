@@ -1,0 +1,344 @@
+\clearpage
+\section{Kernfunktionalit"aten in der Entwicklung mit ns-3-dev-TSCH}
+
+Dieses Kapitel beschreibt die Kernfunktionalit"aten welche f"ur den Umgang und
+die Entwicklung mit dem Entwicklungsrepository ns-3-dev-TSCH wichtig sind.
+Dabei werden zuerst die Kernmethoden aus der ns-3 Helperklasse
+\textit{lr-wpan-tsch-helper} erl"autert, bevor weitere allgemeine ns-3
+Funktionen n"aher betrachtet werden.
+
+\subsection{Kernmethoden der Helperklasse LrWpanTschHelper}
+
+\subsubsection{LrWpanTschHelper::Install}
+Die Methode \textit{LrWpanTschHelper::Install} ab Zeile 309 enh"alt einen
+NodeIterator welcher f"ur jeden erstellten Knoten das dazugeh"orige NetDevice
+erstellt und ihm den richtigen Channel zuordnet. Wie im Kommentar ersichtlich
+fehlt bislang die M"oglichkeit den Adressenmodus sowie die PanID f"ur
+die NetDevices bei Erstellung festzulegen, statt dessen muss dieser Vorgang
+in einem zus"atzlichen Schritt durchgef"uhrt werden.
+
+\begin{lstlisting}[frame=single]
+NetDeviceContainer
+LrWpanTschHelper::Install (NodeContainer c)
+{
+  NetDeviceContainer devices;
+  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); i++)
+    {
+      Ptr<Node> node = *i;
+
+      Ptr<LrWpanTschNetDevice> netDevice = CreateObject<LrWpanTschNetDevice> ();
+      netDevice->SetChannel (m_channel);
+      node->AddDevice (netDevice);
+      netDevice->SetNode (node);
+      // \todo add the capability to change short address, extended
+      // address and panId. Right now they are hardcoded in LrWpanTschMac::LrWpanTschMac ()
+      devices.Add (netDevice);
+    }
+  return devices;
+}
+\end{lstlisting}
+
+\subsubsection{LrWpanTschHelper::AssociateToPan}
+\label{helper_associatetopan}
+Die Methode \textit{LrWpanTschHelper::AssociateToPan} beginnend ab Zeile 390
+durchl"auft alle erstellten NetDevices und legt deren PanId und ShortAdresse
+f"ur den TSCH (NMAC) und Nicht-TSCH (OMAC) Mode fest. Diese Funktionalit"aten
+sollten in jeweils eigene Methoden ausgelagert werden, im besonderen das
+Festlegen der Adressen um die hardgecodete Implementierung zu ersetzen.
+
+\begin{lstfloat}
+\begin{lstlisting}[frame=single]
+void
+LrWpanTschHelper::AssociateToPan (NetDeviceContainer c, uint16_t panId)
+{
+  NetDeviceContainer devices;
+  uint16_t id = 1;
+  uint8_t idBuf[2];
+
+  for (NetDeviceContainer::Iterator i = c.Begin (); i != c.End (); i++)
+    {
+      Ptr<LrWpanTschNetDevice> device = DynamicCast<LrWpanTschNetDevice> (*i);
+      if (device)
+        {
+          idBuf[0] = (id >> 8) & 0xff;
+          idBuf[1] = (id >> 0) & 0xff;
+          Mac16Address address;
+          address.CopyFrom (idBuf);
+
+          device->GetOMac ()->SetPanId (panId);
+          device->GetOMac ()->SetShortAddress (address);
+          device->GetNMac ()->SetPanId (panId);
+          device->GetNMac ()->SetShortAddress (address);
+          id++;
+        }
+    }
+  return;
+}
+\end{lstlisting}
+\end{lstfloat}
+
+\subsubsection{LrWpanTschHelper::ConfigureSlotframeAllToPan}
+
+Die Methode \textit{LrWpanTschHelper::ConfigureSlotframeAllToPan} ab Zeile 1068
+definiert den Schedule der Kommunikation, durch die Reihenfolge der
+Link-Methoden \textit{AddLink}, \textit{AddAdvLink} und \textit{AddBcastLinks}.
+Die Methode erstellt am Anfang eine Anzahl an Slotframes in Abh"angigkeit
+zur Anzahl der NetDevices, Empty Timeslots sowie einem zus"atzlichen Broadcast
+und der M"oglichkeit der bidirektionalen Verbindung. Anschliessend werden
+ein Advertisment Link im Timeslot 0 hinzugef"ugt, der optionale Broadcast Link
+sowie den Direktverbindung an beteiligten NetDevices in einfacher und bidirektionaler
+Verbindung.
+Diese Methode sowie deren verwendeten Helper-Methoden m"ussen "uberarbeitet
+werden, damit ein selbstgew"ahlter Schedule mit definierten Variablen anwendbar ist,
+ansonsten k"onnen nur die im Rahmen der Parameter entsprechend Kommunikationsabl"aufe
+definiert werden.
+
+
+\begin{lstlisting}[frame=single]
+void
+LrWpanTschHelper::ConfigureSlotframeAllToPan(NetDeviceContainer devs, int empty_timeslots, bool bidir, bool bcast)
+{
+  int size = (bcast ? 2 : 1) + (bidir ? 2 : 1)*(devs.GetN ()-1) + empty_timeslots;
+
+  AddSlotframe(devs,m_slotframehandle,size);
+
+  //Add links
+  AddLinkParams alparams;
+  alparams.slotframeHandle = m_slotframehandle;
+  alparams.channelOffset = 0;
+
+  alparams.linkHandle = 0;
+  alparams.timeslot = 0;
+  AddAdvLink (devs,0,alparams);
+
+  if (bcast) {
+	  alparams.linkHandle = 1;
+	  alparams.timeslot = 1;
+	  AddBcastLinks (devs,0,alparams);
+  }
+
+  uint16_t c=(bcast ? 2 : 1);
+
+  for (u_int32_t i = 0; i < devs.GetN ()-1; i++,c++)
+    {
+      alparams.linkHandle = c;
+      alparams.timeslot = c;
+      AddLink(devs,i+1,0,alparams,false);
+    }
+
+  if (bidir)
+    for (u_int32_t i = 0; i < devs.GetN ()-1; i++,c++)
+    {
+      alparams.linkHandle = c;
+      alparams.timeslot = c;
+      AddLink(devs,0,i+1,alparams,false);
+    }
+   m_slotframehandle++;
+}
+\end{lstlisting}
+
+\subsubsection{LrWpanTschHelper::AddAdvLink und LrWpanTschHelper::AddBcastLinks}
+
+Die beiden Methoden \textit{LrWpanTschHelper::AddAdvLink} in Zeile 868 und
+\textit{LrWpanTschHelper::AddBcastLinks} in Zeile 904 beschreiben den
+Advertisment- bzw. Broadcast-Link. Nachfolgend ist der Code f"ur den Advertisment
+Link abgebildet. Der Unterschied zwischen beiden Linktypen liegt in der Verarbeitung
+der Sende und Empfangsverbindung.
+Der Broadcast Link erstellt MlmeSetLinkRequests an alle Knoten und sendet an die
+Adresse \textit{ff:ff} w"ahrend der Transmitphase. Im Laufe der Receive Phase
+h"ort er auf die Adresse \textit{ff:ff} und "'offnet Links an alle Knoten mit einem
+weiteren MlmeSetLinkRequest. Im aktuellen Entwicklungsstand ist der Broadcast Link
+nicht anwendbar, da s"aemtliche Links innerhalb des PANs in den Sendenmodus geschaltet werden
+und auch diesen w"ahrend des Timeslots nicht verlassen, weshalb zwar Pakete gesendet
+aber nicht empfangen werden k"onnen.
+F"ur unseren Anwendungsfall soll dieser allerdings den "'Join Request"' eines
+beitretenden Knoten beinhalten, weshalb die Implementierung ge"andert werden muss.
+Da zumindest der PAN Koordinator die Pakete empfangen muss gehen wir in Zukunft
+davon aus, dass der PAN Koordinator das erste NetDevice darstellt. Konkret wird k"unftig
+nicht erste NetDevice nicht mehr in den Transmit Modus geschalten, indem die for-Schleife
+erst mit dem zweiten NetDevice beginnt zu z"ahlen.
+
+\begin{lstlisting}[frame=single]
+//10000000 to transmit
+linkRequest.linkOptions.reset();
+linkRequest.linkOptions.set(0,1);
+linkRequest.linkOptions.set(2,1);
+linkRequest.linkType = MlmeSetLinkRequestlinkType_ADVERTISING;
+linkRequest.nodeAddr = Mac16Address("ff:ff");
+for ( u_int32_t i = 1;i < devs.GetN ();i++)
+  {
+        linkRequest.TxID = i;
+        linkRequest.RxID = coordinatorPos;
+        linkRequest.linkFadingBias = FadingBias[coordinatorPos][i];
+        devs.Get(i)->GetObject<LrWpanTschNetDevice> ()->GetNMac()->MlmeSetLinkRequest (linkRequest);
+  }
+\end{lstlisting}
+
+Der Advertisment Link dagegen sendet in der Transmit Phase ebenfalls an die
+Adresse \textit{ff:ff}, erstellt aber nur einen MlmeSetLinkRequest an ein bestimmten
+NetDevice. Im Verlauf der Receive Phase wird nur auf die Adresse des Senders
+geh"ort und nur zu diesem ein Link aufgebaut.
+
+Die Methode \textit{LrWpanTschHelper::AddAdvLink} wird f"ur den Network Formation
+Process ben"otigt und erh"aelt in der Variable \textit{u\_int32\_t senderPos}
+das beizutretende NetDevice.
+
+Aufgrund der momentanen Implementierung, k"onnen wir den Broadcast Link leider
+nicht f"ur Broadcast Transmits verwenden, weshalb der Advertisment Link
+diese Aufgabe "'ubernehmen wird, solange dieser Umstand nicht ge"andert wird.
+
+
+\begin{lstlisting}[frame=single]
+void
+LrWpanTschHelper::AddAdvLink(NetDeviceContainer devs,u_int32_t senderPos, AddLinkParams params)
+{
+  MlmeSetLinkRequestParams linkRequest;
+  linkRequest.Operation = MlmeSetLinkRequestOperation_ADD_LINK;
+  linkRequest.linkHandle = params.linkHandle;
+  linkRequest.slotframeHandle = params.slotframeHandle;
+  linkRequest.Timeslot = params.timeslot;
+  linkRequest.ChannelOffset = params.channelOffset;
+
+  //10000000 to transmit
+  linkRequest.linkOptions.reset();
+  linkRequest.linkOptions.set(0,1);
+  linkRequest.linkType = MlmeSetLinkRequestlinkType_ADVERTISING;
+  linkRequest.nodeAddr = Mac16Address("ff:ff");
+  linkRequest.linkFadingBias = NULL;
+  linkRequest.TxID = senderPos;
+  linkRequest.RxID = 0;
+  devs.Get(senderPos)->GetObject<LrWpanTschNetDevice> ()->GetNMac()->MlmeSetLinkRequest (linkRequest);
+
+  //01010000 to receive
+  linkRequest.linkOptions.reset();
+  linkRequest.linkOptions.set(1,1);
+  linkRequest.linkOptions.set(3,1);
+  linkRequest.nodeAddr = Mac16Address::ConvertFrom(devs.Get(senderPos)->GetAddress());
+  for ( u_int32_t i = 0;i < devs.GetN ();i++)
+      if (i != senderPos) {
+          linkRequest.linkFadingBias = FadingBias[i][senderPos];
+          linkRequest.TxID = senderPos;
+          linkRequest.RxID = i;
+          devs.Get(i)->GetObject<LrWpanTschNetDevice> ()->GetNMac()->MlmeSetLinkRequest (linkRequest);
+        }
+}
+\end{lstlisting}
+
+\subsubsection{LrWpanTschHelper::GenerateTraffic}
+
+Mit den bislang beschriebenen Hilfsmethoden wird der Schedule innerhalb des TSCH
+Mode fest und entsprechen damit den M"oglichkeiten die h"ohere Schichten besitzen
+um Routing und Datenverkehr zu beschreiben. Dadurch wird zwar vorgegeben wann und
+wie die Kommunikation innerhalb eines PAN stattfindet, der eigentliche Austausch von
+Paketen zwischen den Knoten wird aber von einer anderen Hilfsmethode geregelt.
+
+Diese Funktionalit"at wird von der Methode \textit{LrWpanTschHelper::GenerateTraffic}
+ab Zeile 1129 wiedergespiegelt. Dabei wird ein Simulator Schedule gestartet, welcher
+einen Ablauf an zeitdiskreten Events beschreibt wodurch MAC-Frames zwischen dem
+ausgew"ahlten NetDevice \textit{dev} und seinem Ziel \textit{dst} gesendet werden.
+Die Parameter \textit{start} und \textit{duration} geben dabei die Gesamtl"ange
+der Kommunikation an. Wichtig ist zus"atzlich der Parameter \textit{interval}, welcher
+die zeitlichen Abst"ande zwischen zwei Events angibt. Die Gewichtung dieses Parameter
+wird im
+
+\begin{lstlisting}[frame=single]
+void
+LrWpanTschHelper::GenerateTraffic(Ptr<NetDevice> dev, Address dst, int packet_size, double start, double duration, double interval)
+{
+  double end = start+duration;
+  Simulator::Schedule(Seconds(start),&LrWpanTschHelper::SendPacket,this,dev,dst,packet_size,interval,end);
+}
+\end{lstlisting}
+
+
+\subsection{Logging und Tracing}
+
+Das Logging in ns3 erm"oglicht genaue Informationen "'uber den genauen Ablauf
+der Netzwerksimulation zu erhalten wird das Logging eingesetzt, damit k"onnen
+genauere Informationen erhalten werden, als beim "'ublichen Tracing. Da die
+Informationsf"ulle extrem ansteigt wurde f"ur die einzelnen Loggingkomponenten
+eine Hilfsmethode geschrieben.
+
+\begin{lstlisting}[frame=single]
+void
+LogComponents(bool phy, bool csmaca, bool diverse)
+{
+  LogComponentEnableAll (LOG_PREFIX_TIME);
+  LogComponentEnableAll (LOG_PREFIX_FUNC);
+  LogComponentEnable ("LrWpanTschMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanTschNetDevice", LOG_LEVEL_ALL);
+  if (phy)
+  {
+  LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanSpectrumSignalParameters", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanSpectrumValueHelper", LOG_LEVEL_ALL);
+  }
+  if (csmaca)
+  {
+  LogComponentEnable ("LrWpanCsmaCa", LOG_LEVEL_ALL);
+  }
+  if (diverse)
+  {
+  LogComponentEnable ("LrWpanErrorModel", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanInterferenceHelper", LOG_LEVEL_ALL);
+  }
+}
+\end{lstlisting}
+
+Als Beispiel wird ein Ausschnitt herangezogen, der am Anfang eines neuen diskreten
+Events steht und die TSCH Funktionalit"at der Simulation angibt.
+Darin meldet zuerst das LrWpanTschNetDevice \textit{00:02}, dass Daten an das Ger"at
+mit der MAC-Adresse \textit{02-02-00:01} gesendet werden. Nachdem die Primitiven
+gesetzt wurden, inkrementieren zuerst alle Ger"ate iher ASN und geben ihre
+Aktion in diesem Timeslot an. Im Beispiel empf"angt \textit{00:01} Daten und
+richtet sich darauf ein, diese zu Empfangen. Das Ger"at \textit{00:02} erkennt ein
+Paket in seiner Warteliste und startet die Sendeprozedur.
+
+\begin{lstlisting}[frame=single]
+0.02s LrWpanTschNetDevice:Send(0x14ee770, 0x14fd5f0, 02-02-00:01, 34525)
+0.02s LrWpanTschNetDevice:GetMtu(0x14ee770)
+0.02s [address 00:02] LrWpanTschMac:McpsDataRequest(0x14ee800, 0x14fd5f0)
+0.02s [address 00:02] LrWpanTschMac:SetTxLinkQueue(0x14ee800)
+0.02s [address 00:02] LrWpanTschMac:SetTxLinkQueue(): Enqueuing packet with SeqNum = 108 in queue with link sequence = 0
+0.02s [address 00:01] LrWpanTschMac:IncAsn(0x14ec530)
+0.02s [address 00:02] LrWpanTschMac:IncAsn(0x14ee800)
+0.02s [address 00:03] LrWpanTschMac:IncAsn(0x14f0c50)
+0.02s [address 00:04] LrWpanTschMac:IncAsn(0x14f3080)
+0.02s [address 00:05] LrWpanTschMac:IncAsn(0x14f54e0)
+0.02s [address 00:06] LrWpanTschMac:IncAsn(0x14f7980)
+0.02s [address 00:07] LrWpanTschMac:IncAsn(0x14f9da0)
+0.02s [address 00:08] LrWpanTschMac:IncAsn(0x14fc1f0)
+0.02s [address 00:01] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:01] LrWpanTschMac:ScheduleTimeslot(): Link found at timeslot 2
+0.02s [address 00:01] LrWpanTschMac:ScheduleTimeslot(): TSCH Changing to channel 18
+0.02s [address 00:01] LrWpanTschMac:ScheduleTimeslot(): 0x14ec530setting for channel 18 fading bias: 1
+0.02s [address 00:01] LrWpanTschMac:ScheduleTimeslot(): Start timeslot receiving procedure
+0.02s [address 00:02] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 1
+0.02s [address 00:02] LrWpanTschMac:ScheduleTimeslot(): Link found at timeslot 2
+0.02s [address 00:02] LrWpanTschMac:ScheduleTimeslot(): TSCH Changing to channel 18
+0.02s [address 00:02] LrWpanTschMac:ScheduleTimeslot(): 0x14ee800setting for channel 18 fading bias: 1
+0.02s [address 00:02] LrWpanTschMac:ScheduleTimeslot(): Queue contained link size = 1
+0.02s [address 00:02] LrWpanTschMac:FindTxPacketInEmptySlot(0x14ee800)
+0.02s [address 00:02] LrWpanTschMac:FindTxPacketInEmptySlot(): Find Tx packet in queue with link position = 0 with queue size = 1
+0.02s [address 00:02] LrWpanTschMac:ScheduleTimeslot(): Start timeslot transmiting procedure, seqnum = 108
+0.02s [address 00:03] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:03] LrWpanTschMac:ScheduleTimeslot(): No link in this timeslot, turning off the radio
+0.02s [address 00:04] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:04] LrWpanTschMac:ScheduleTimeslot(): No link in this timeslot, turning off the radio
+0.02s [address 00:05] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:05] LrWpanTschMac:ScheduleTimeslot(): No link in this timeslot, turning off the radio
+0.02s [address 00:06] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:06] LrWpanTschMac:ScheduleTimeslot(): No link in this timeslot, turning off the radio
+0.02s [address 00:07] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:07] LrWpanTschMac:ScheduleTimeslot(): No link in this timeslot, turning off the radio
+0.02s [address 00:08] LrWpanTschMac:ScheduleTimeslot(): Timeslot 2 ts = 2 Queue size = 0
+0.02s [address 00:08] LrWpanTschMac:ScheduleTimeslot(): No link in this timeslot, turning off the radio
+\end{lstlisting}
+
+
+Zum tracen der einzelnen Pakete, wird allen vorran die Methode \textit{EnablePcap}
+verwendet um die pcap Dateien mitzuschneiden, welche anschliessend zur Netzwerkanalyse
+in Wireshark ausgewertet werden k"onnen.
+\begin{lstlisting}[frame=single]
+lrWpanHelper.EnablePcap (std::string ("tsch_scenario"), panCoordNetDevice, true);
+\end{lstlisting}

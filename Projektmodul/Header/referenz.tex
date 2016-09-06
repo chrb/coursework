@@ -1,0 +1,68 @@
+
+% Literatur-Bibliothek
+% \usepackage[authoryear]{natbib}              % Literaturangaben deutsch mit Autor und Jahr
+% \bibliographystyle{alphadin}               % deutscher Bibliotheksstil
+% \usepackage{csquotes}
+% \usepackage[bibstyle=authoryear,
+%             citestyle=authoryear-icomp,
+%             backend=bibtex,
+%             hyperref=auto,
+%             backref=true,
+%             clearlang=true,
+%             language=german,
+%             backrefstyle=three,
+%             refsection=none, part, chapter, section, subsection
+%             ]{biblatex}
+
+ %Stil der Zitate und der Bibliographie
+ \usepackage[style=numeric-comp]{biblatex}
+ \nocite{*}
+ %Bibliographie laden:
+ \addbibresource{Header/literatur.bib}
+
+
+% Interaktive Referenzen, und PDF-Keys
+\usepackage{xr-hyper}
+\usepackage[pagebackref,                % R\"uckreferenz im Literaturverzeichnis
+           ps2pdf,                      % Treiber f\"ur ps zu pdf ; f\"ur direkt nach pdf: pdftex
+           ]{hyperref}
+
+% Erweiterte Einstellungen zu hyperref
+
+\hypersetup{
+        breaklinks=true,        % zu lange Links unterbrechen
+        colorlinks=true,        % F\"arben von Referenzen
+        citecolor=black,        % Farbe der Zitate
+        linkcolor=black,        % Farbe der Links
+         pagecolor=black,        % Farbe der Seitenlinks
+        extension=pdf,          % Externe Dokumente k\"onnen eingebunden werden.
+        %linktocpage,           % Seite im Inhaltsverzeichnis als Link nicht der Text
+        ngerman,
+	pdfview=FitH,
+	pdfstartview=FitH,
+	bookmarksnumbered=true, % Anzeige der Abschnittsnummern	% pdf-Titel
+	pdfauthor={\autor}% pdf-Autor
+}
+
+% Namen f\"ur Referenzen
+
+%\newcommand{\ownautorefnames}{
+%  \renewcommand{\sectionautorefname}{Kapitel}
+%  \renewcommand{\subsectionautorefname}{Unterkapitel}
+%  \renewcommand{\subsubsectionautorefname}{\subsectionautorefname}
+%  \renewcommand{\appendixautorefname}{Anhang}
+%  \renewcommand{\figureautorefname}{Abbildung}
+%}
+
+% R\"uckreferenzentext zur Literatur
+ % \renewcommand*{\bibbtasep}{, }
+%\def\bibandname{und}%
+%\renewcommand*{\backref}[1]{}
+%\renewcommand*{\backrefalt}[4]{
+%\ifcase #1 %(Nicht zitiert, also Erg\"anzungsliteratur.)
+%\or %(Zitiert auf Seite #2.)
+%\else %(Zitiert auf den Seiten #2.)
+%\fi
+%}
+%\renewcommand{\backreftwosep}{ und~} % seperate 2 pages
+%\renewcommand{\backreflastsep}{ und~} % seperate last of longer

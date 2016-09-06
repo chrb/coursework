@@ -1,0 +1,124 @@
+\section{Grundlagen} \label{grundlagen}
+
+\subsection{IEEE 802.15.4 Low-Rate Wireless Personal Area Networks} \label{Kap5-2}
+
+Der Standard IEEE 802.15.4 auch Low-Rate Wireless Personal Area Networks
+LR-WPANs, beschreibt drahtlose Kommunikation f"ur Sensornetzwerke mit g"unstiger,
+haupts"achlich batteriebetriebener Kommunikationshardware welche geringe Datenraten
+erm"oglicht. Der Standard mitsamt seinem beschriebenen Protokoll bildet die
+technologische Basis f"ur Anwendungen im Internet der Dinge IoT.
+
+Die Grundversion offenbarte einige technische L"ucken und Nachteile im Vergleich
+zu anderen Vergleichbaren Technologien (WLAN), weshalb mit dem \textit{Amendment A: MAC sublayer}
+zus"atzliche Eigenschaften und Funktionen hinzugef"ugt wurden. Einige der wichtigsten
+Probleme waren dabei,
+
+\begin{itemize}
+ \item keine garantierte Bandbreite ausserhalb von Guaranteed Time Slot GTS.
+ \item keine Latenzbeschr"ankung.
+ \item kein Schutz gegen Interferenzen und Fading.
+ \item keine Technologie um die Frequenz des Kanals zu wechseln.
+ \item einen unzuverl"assigen MAC Sublayer durch die Verwendung von CSMA/CA
+      Die Wahrscheinlichkeit von Kollisionen "uber den Kanal steigt mit
+      der Anzahl der Knoten durch erh"ohte Contention Time.
+\end{itemize}
+
+% ----------------------------------------------------------------------------
+
+\subsection{IEEE 802.15.4e Amendment A: MAC sublayer} \label{Kap5-3}
+
+Um die Probleme von 802.15.4 zu beheben wurde die 802.15.4e Working Group geschaffen,
+welche das existierende MAC Protokoll verbessern sollte. Dadurch wurde
+der 802.15.4 Standard um zwei Kategorien an MAC Verbesserungen erweitert.
+Einmal den MAC Behavior Modes, welche spezifische Anwendungsbereiche verbessern,
+sowie General Functional Enhancements f"ur generelle Verbesserungen. Bei der Entwicklung
+wurden dabei viele Ideen aus bereits existierenden Standards wie WirelessHART und
+ISA 100.11.a "ubernommen.
+
+\begin{description}
+
+\item[General Functional Enhancements] \hfill \\
+  \begin{description}
+    \item[Information Elements IE] sind bereits seit der Grundversion implementiert,
+    "ubernehmen aber zus"atzliche Aufgaben im Amendment A.
+    \item[Enhanced Beacons EB] bilden eine Erweiterung zu Beacon Frames mit gr"osserer
+    Flexibili"at. Werden als anwendungsbezogene Beacons via IEs im TSCH Mode verwendet.
+
+    \item[Low Energy LE] Austausch der Eigenschaften niedrige Latenz durch
+    niedriger Energieverbrauch, wodurch das Ger"at immer erreichbar erscheint
+%      \item[Multipurpose Frame] addressiert mehrere MAC Operations
+%      \item[MAC Performance Metrics] stellen einen Mechanismus bereit um die
+%      Kanalqualit"at zu ermitteln, wird f"ur das Networking sowie h"ohere Schichten
+%      (6LoWPAN, RPL) ben"otigt.
+%      \item[Fast Assocation FastA] wird bei zeit-kritischen Systemen angewendet.
+  \end{description}
+
+  \item[Behavior Modes] \hfill \\
+
+    \begin{description}
+      \item[Timeslotted Channel Hopping TSCH] f"ur die Verbesserung von automatisierten
+      Anwendungsbereichen.
+      \item[Deterministic and Synchronous Multi-Channel Extension DSME] zur Unterst"utzung
+      von industriellen und kommerziellen Anwendungen, welche strikte Vorgaben
+      an Zeit und Verf"ugbarkeit stellen.
+    \end{description}
+\end{description}
+
+% ----------------------------------------------------------------------------
+
+\subsection{Networksimulator ns-3} \label{Kap5-5}
+
+Im Laufe der Projekts wird der Netzwerksimulator ns-3 verwendet, dabei
+kann die Grobbeschreibung direkt von dem Internetauftritt unter
+\href{http://www.nsam.org}{http://www.nsam.org} entnommen werden.
+
+\begin{alltt}
+ns-3 is a discrete-event network simulator for Internet systems,
+targeted primarily for research and educational use.
+ns-3 is free software, licensed under the GNU GPLv2 license,
+and is publicly available for research, development, and use.
+\end{alltt}
+
+ns-3 ist konzipiert als eine Sammlung von Software-Bibliotheken, welche zusammen
+ein System bilden. Diese einzelnen Bibliotheken werden als Module bezeichnet
+und implementieren jeweils einen eigenen Standard, welche auf den Kernmodulen
+aufbauen. Dadurch k"onnen Benutzerprogramme durch Verwendung dieser Module
+aufgebaut werden.
+
+Wir gehen im weiteren davon aus, dass der Leser mit ns-3 vertraut ist,
+falls nicht, kann das mit Hilfe des \href{https://www.nsnam.org/ns-3-24/documentation/}{Tutorial}
+nachgeholt werden.
+
+%----------------------------------------------
+\subsubsection{LR-WPAN Modul}
+
+Im Verlauf dieser Arbeit wurde haupts"achlich das LR-WPAN Modul angewendet, welches
+in der offiziellen ns-3 Version (NS-3.24) den IEEE 802.15.4 Standard mitsamt
+dessen Funktionalit"aten und Hilfsanwendungen implementiert.
+
+Der Aufbau des Modules erfolgt dabei nach ns-3 Standard und entspricht dabei der
+Ordnerhierarchie \textit{models} mit den direkten Implementierungen des Standards,
+\textit{helper} wichtigen und n"utzlichen Helperklassen und Methoden, zur einfachen
+Nutzung des Standards sowie den selbsterkl"arenden Ordnern \textit{examples} und
+\textit{test}.
+
+F"ur eine genaue Beschreibung und Informationen zur Entwicklung des LR-WPAN Modules,
+kann auf die Arbeit von Nikica Krezic-Luger\cite{bachelorarbeit} verwiesen werden.
+
+Zus"atzlich zum offiziellen LR-WPAN Modul, wird nun das Entwicklerrepository ns-3-dev-tsch
+der Entwicklungsgruppe \textit{RICH} von EIT Digital betrachtet. Dieses Repository
+besteht aus einem vollst"andigen ns-3 Build mitsamt den Erweiterungen im LR-WPAN
+Modul um die TSCH Mode Funktionalit"aten. Dieser Ansatz zur Erweiterung von ns-3
+wurde im Januar 2015 zur Codereview freigegeben und kann in Github unter
+\href{https://github.com/EIT-ICT-RICH/ns-3-dev-TSCH}{ns-3-dev-TSCH}
+gefunden werden.
+
+Zus"atzlich zum Code hat die Entwicklergruppe eine
+\href{http://mailman.isi.edu/pipermail/ns-developers/2015-January/012459.html}{Verlautbarung}
+zum Commitstand abgegeben, die folgende Funktionen im Detail beeinhaltet:
+
+\begin{itemize}
+  \item Wechsel von Standard 802.15.4 auf den TSCH Mode, w"ahrend der Kommunikation
+  \item das Energy Model
+  \item multi-path fading modeling (FadingBias)
+\end{itemize}

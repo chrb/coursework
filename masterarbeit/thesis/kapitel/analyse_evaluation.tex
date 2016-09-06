@@ -1,0 +1,84 @@
+\section{Analyse und Evaluation}
+\label{sec:evaluation}
+
+% ------------------------------------------------
+% Prozess
+% ------------------------------------------------
+
+\subsection{Testprozess in Cooja/Contiki}
+\label{subsec:ae_testprozess}
+
+Der Testablauf wird zwei Bereiche aufgeteilt, den
+
+\begin{itemize}
+  \item Netzwerkaufbau
+  \item Beitrittsprozess
+\end{itemize}
+
+\subsection{Topologien}
+\label{subsec:ae_topologien}
+
+F"ur Testzwecke wurden zwei Netzwerktopologien ausgew"ahlt um den Algorithmus mit
+mehreren Anwendungsf"allen zu kontrollieren
+
+Netzwerk A
+Platzhalter - Durch Bild ersetzen
+\begin{lstlisting}[frame=single]
+//
+// n0 - n1 - n2
+//  |    |    |
+// n3 - n4 - n5
+//  |    |    |
+// n6 - n7 - n8
+//
+\end{lstlisting}
+
+Netzwerk B
+Knoten n6 betritt das bereits etablierte Netzwerk mit zwei Parentknoten
+Platzhalter - Durch Bild ersetzen
+\begin{lstlisting}[frame=single]
+//
+//          n0
+//         /  \
+//      n1     n2
+//   / | | \  /
+// n3 n4 n5 n6
+//
+\end{lstlisting}
+
+\subsection{Leistungsmetriken}
+\label{subsec:ae_leistungsmetriken}
+
+
+\begin{description}
+  \item [Network Formation Time] Zeit vom ersten Enhanced Beacon, bis letzter
+  Knoten dem Netzwerk beigetreten ist
+  \item [Joining Time] Zeit die ein Knoten ben"otigt um einem Netzwerk beizutreten
+  (abh"angig von festgelegten Regeln)
+  \item [Overhead] Welchen Overhead an Nachrichten erzeugt der Algorithmus
+  \item [Zeitraum Kontrollnachrichten] Wieviel Zeit wird f"ur die Kontrollnachrichten
+  reserviert
+  \item [Verhalten Algorithmus "'uber l"angeren Zeitraum] Wie verhalten sich die Leistungsmetriken
+  "'uber einen l"angeren Zeitraum?
+  \item [Aktivit"atszeit Knoten] Wie lange ist ein Knoten im Rahmen des Schedules aktiv
+  im Verh"altnis zur tats"achlichen Aktivit"at.
+  \item [Energieverbrauch] Wieviel Energie
+\end{description}
+
+% ------------------------------------------------
+% Referenzwerte Minimal 6TiSCH
+% ------------------------------------------------
+\subsection{Network Formation mit Minimal 6TiSCH Configuration}
+\label{subsec:ae_6tisch}
+
+% ------------------------------------------------
+% Ergebnisse Algorithmus
+% ------------------------------------------------
+\subsection{Network Formation mit Algorithmus}
+\label{subsec:ae_algorithmus}
+
+% ------------------------------------------------
+% Vergleich und Evaluation
+% ------------------------------------------------
+\subsection{Bewertung der Ergebnisse}
+\label{subsec:ae_bewertung}

@@ -1,0 +1,363 @@
+\section{Appendix: Scriptimplementierung}
+
+\subsection{tsch\_scenario.cc}
+
+\begin{lstlisting}[frame=single]
+#include <ns3/log.h>
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/lr-wpan-module.h>
+#include <ns3/simulator.h>
+#include <ns3/single-model-spectrum-channel.h>
+#include <ns3/packet.h>
+#include <ns3/mobility-module.h>
+#include <ns3/spectrum-helper.h>
+#include <string>
+
+#include <iostream>
+
+using namespace ns3;
+
+/////////////////////////////////
+// Configuration
+/////////////////////////////////
+bool verbose = true;       // enable logging
+uint32_t numberOfFFDs = 7;      // FFDs
+bool brdcst_as_join = true;
+bool collision = true;
+
+int pktsize = 91;           //size of packets, in bytes
+double duration = 1;       //simulation total duration, in seconds
+double starttopancoord = 0.02;        // Starttime transmitting FFDs
+double interval = 0.2;
+double starttoffds = 0.08;
+
+void
+LogComponents(bool phy, bool csmaca, bool diverse)
+{
+  LogComponentEnableAll (LOG_PREFIX_TIME);
+  LogComponentEnableAll (LOG_PREFIX_FUNC);
+  LogComponentEnable ("LrWpanTschMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanTschNetDevice", LOG_LEVEL_ALL);
+  if (phy)
+  {
+    LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanSpectrumSignalParameters", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanSpectrumValueHelper", LOG_LEVEL_ALL);
+  }
+  if (csmaca)
+  {
+    LogComponentEnable ("LrWpanCsmaCa", LOG_LEVEL_ALL);
+  }
+  if (diverse)
+  {
+    LogComponentEnable ("LrWpanErrorModel", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanInterferenceHelper", LOG_LEVEL_ALL);
+  }
+
+}
+
+void
+EnableTsch(LrWpanTschHelper* lrWpanHelper,NetDeviceContainer& netdev)
+{
+  lrWpanHelper->EnableTsch(netdev,0,duration);
+}
+
+int main (int argc, char** argv)
+{
+
+  CommandLine cmd;
+  cmd.AddValue ("verbose", "Print trace information if true", verbose);
+  cmd.Parse (argc, argv);
+  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+
+  // ----------------------------
+  // Nodes
+  NodeContainer ffds;
+  NodeContainer panCoord;
+  ffds.Create (numberOfFFDs);
+  panCoord.Create (1);
+  NodeContainer lrwpanNodes(panCoord, ffds);
+
+  /////////////////////////////////
+  // Mobility
+  /////////////////////////////////
+
+  MobilityHelper mobility;
+  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
+                                 "GridWidth", UintegerValue(4),
+                                 "MinX", DoubleValue (0.0),
+                                 "MinY", DoubleValue (0.0),
+                                 "DeltaX", DoubleValue (5),
+                                 "DeltaY", DoubleValue (5),
+                                 "LayoutType", StringValue ("RowFirst"));
+  mobility.Install (lrwpanNodes);
+
+  /////////////////////////////////
+  // Channel
+  /////////////////////////////////
+  SpectrumChannelHelper channelHelper = SpectrumChannelHelper::Default ();
+  channelHelper.SetChannel ("ns3::MultiModelSpectrumChannel");
+  Ptr<SpectrumChannel> channel = channelHelper.Create ();
+
+  /////////////////////////////////
+  // Configure lrwpan nodes
+  /////////////////////////////////
+  LrWpanTschHelper lrWpanHelper(channel,numberOfFFDs+1,false,true);
+
+  // Add and install the LrWpanTschNetDevice for each node
+  NetDeviceContainer netdev = lrWpanHelper.Install (lrwpanNodes);
+
+  // AssociateToPan
+  lrWpanHelper.AssociateToPan(netdev,123);
+
+  // Slotframes
+  lrWpanHelper.ConfigureSlotframeAllToPan(netdev,0,false,true); // slotframes = 8
+
+  // start with TSCH
+  Simulator::Schedule(Seconds(0),&EnableTsch,&lrWpanHelper,netdev);
+
+  // Packets from panCoord
+  Ptr<Node> panCoordNode = panCoord.Get (0);
+  Ptr<NetDevice> panCoordNetDevice = panCoordNode->GetDevice (0);
+  Address address_panCoord = panCoordNetDevice->GetAddress ();
+
+  // panCoord
+  // Broadcast Address
+  Mac16Address brdcst ("ff:ff");
+  // Advertisment Link
+  lrWpanHelper.GenerateTraffic (panCoordNetDevice, brdcst, pktsize, 0.0, duration, interval);
+
+  // Broadcast Link
+  if (brdcst_as_join)
+  {
+    // Send File from FFD to pancoord during Brdcst link
+    Ptr<Node> brdcst_ffd_one = ffds.Get (0); // 00:01
+    Ptr<NetDevice> brdcst_ffd_one_netdev = brdcst_ffd_one->GetDevice (0);
+    Ptr<Node> brdcst_ffd_two = ffds.Get (1); // 00:02
+    Ptr<NetDevice> brdcst_ffd_two_netdev = brdcst_ffd_one->GetDevice (0);
+
+    if (collision)
+    {
+      // send to pancoord
+      lrWpanHelper.GenerateTraffic (brdcst_ffd_one_netdev, address_panCoord, pktsize, 0.1, duration, interval);
+      lrWpanHelper.GenerateTraffic (brdcst_ffd_two_netdev, address_panCoord, pktsize, 0.1, duration, interval);
+      // send brdcst
+      lrWpanHelper.GenerateTraffic (brdcst_ffd_one_netdev, brdcst, pktsize, 0.1, duration, interval);
+      lrWpanHelper.GenerateTraffic (brdcst_ffd_two_netdev, brdcst, pktsize, 0.1, duration, interval);
+    }
+    else
+    {
+      lrWpanHelper.GenerateTraffic (brdcst_ffd_one_netdev, address_panCoord, pktsize, 0.1, duration, interval);
+    }
+  }
+  else
+  {
+    //Address brdcst = panCoordNetDevice->GetBroadcast (); // ff:ff
+    lrWpanHelper.GenerateTraffic (panCoordNetDevice, brdcst, pktsize, 0.1, duration, interval);
+  }
+
+  // FFDs
+  for (NodeContainer::Iterator i = ffds.Begin (); i != ffds.End (); i++)
+  {
+    Ptr<Node> node = *i;
+    Ptr<NetDevice> device = node->GetDevice (0);
+    lrWpanHelper.GenerateTraffic (device, address_panCoord, pktsize, starttopancoord, duration, interval);
+    starttopancoord += 0.01; // starttopancoord = 0.02
+  }
+
+  //Enable PCAP and Ascii Tracing
+  AsciiTraceHelper ascii;
+  Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream ("tsch_scenario.tr");
+  lrWpanHelper.EnablePcapAll (std::string ("tsch_scenario"), true);
+  lrWpanHelper.EnablePcap (std::string ("tsch_scenario"), panCoordNetDevice, true);
+  lrWpanHelper.EnableAsciiAll (stream);
+  if (verbose)
+    {
+      //lrWpanHelper.EnableLogComponents ();
+      LogComponents(false, false, false);
+    }
+
+  // ------------------------------
+
+  Simulator::Run ();
+  Simulator::Destroy ();
+  return 0;
+}
+
+\end{lstlisting}
+
+\subsection{tsch\_scenario\_collision.cc}
+\begin{lstlisting}[frame=single]
+#include <ns3/log.h>
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/lr-wpan-module.h>
+#include <ns3/simulator.h>
+#include <ns3/single-model-spectrum-channel.h>
+#include <ns3/packet.h>
+#include <ns3/mobility-module.h>
+#include <ns3/spectrum-helper.h>
+#include <string>
+
+#include <iostream>
+
+using namespace ns3;
+
+/////////////////////////////////
+// Configuration
+/////////////////////////////////
+bool verbose = true;       // enable logging
+uint32_t numberOfFFDs = 2;      // FFDs
+
+int pktsize = 91;           //size of packets, in bytes
+double duration = 1;       //simulation total duration, in seconds
+double starttopancoord = 0.01;        // Starttime transmitting FFDs
+double interval = 0.1;
+double starttoffds = 0.08;
+
+
+void
+LogComponents(bool phy, bool csmaca, bool diverse)
+{
+  LogComponentEnableAll (LOG_PREFIX_TIME);
+  LogComponentEnableAll (LOG_PREFIX_FUNC);
+  LogComponentEnable ("LrWpanTschMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanTschNetDevice", LOG_LEVEL_ALL);
+  if (phy)
+  {
+    LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanSpectrumSignalParameters", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanSpectrumValueHelper", LOG_LEVEL_ALL);
+  }
+  if (csmaca)
+  {
+    LogComponentEnable ("LrWpanCsmaCa", LOG_LEVEL_ALL);
+  }
+  if (diverse)
+  {
+    LogComponentEnable ("LrWpanErrorModel", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanInterferenceHelper", LOG_LEVEL_ALL);
+  }
+
+}
+
+void
+EnableTsch(LrWpanTschHelper* lrWpanHelper,NetDeviceContainer& netdev)
+{
+  lrWpanHelper->EnableTsch(netdev,0,duration);
+}
+
+int main (int argc, char** argv)
+{
+
+  CommandLine cmd;
+  cmd.AddValue ("verbose", "Print trace information if true", verbose);
+  cmd.Parse (argc, argv);
+  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+
+  // ----------------------------
+  // Nodes
+  NodeContainer ffds;
+  NodeContainer panCoord;
+  ffds.Create (numberOfFFDs);
+  panCoord.Create (1);
+  NodeContainer lrwpanNodes(panCoord, ffds);
+
+  /////////////////////////////////
+  // Mobility
+  /////////////////////////////////
+
+  MobilityHelper mobility;
+  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
+                                 "GridWidth", UintegerValue(4),
+                                 "MinX", DoubleValue (0.0),
+                                 "MinY", DoubleValue (0.0),
+                                 "DeltaX", DoubleValue (5),
+                                 "DeltaY", DoubleValue (5),
+                                 "LayoutType", StringValue ("RowFirst"));
+  mobility.Install (lrwpanNodes);
+
+  /////////////////////////////////
+  // Channel
+  /////////////////////////////////
+  SpectrumChannelHelper channelHelper = SpectrumChannelHelper::Default ();
+  channelHelper.SetChannel ("ns3::MultiModelSpectrumChannel");
+  Ptr<SpectrumChannel> channel = channelHelper.Create ();
+
+  /////////////////////////////////
+  // Configure lrwpan nodes
+  /////////////////////////////////
+  LrWpanTschHelper lrWpanHelper(channel,numberOfFFDs+1,false,true);
+
+
+  // Add and install the LrWpanTschNetDevice for each node
+  NetDeviceContainer netdev = lrWpanHelper.Install (lrwpanNodes);
+
+  // ------------------------------;
+
+  // AssociateToPan
+  lrWpanHelper.AssociateToPan(netdev,123);
+
+  // Slotframes
+  int size = 20;
+  lrWpanHelper.AddSlotframe(netdev, 0, size);
+
+  //Add links
+  AddLinkParams alparams;
+  alparams.slotframeHandle = 0;
+  alparams.channelOffset = 0;
+
+  uint16_t c = 1;
+
+  for (u_int32_t i = 0; i < netdev.GetN ()-1; i++,c++)
+    {
+      alparams.linkHandle = c;
+      alparams.timeslot = 1;
+      lrWpanHelper.AddLink(netdev,i+1,0,alparams,true);
+    }
+
+  // start with TSCH
+  Simulator::Schedule(Seconds(0),&EnableTsch,&lrWpanHelper,netdev);
+
+  // Packets from panCoord
+  Ptr<Node> panCoordNode = panCoord.Get (0);
+  Ptr<NetDevice> panCoordNetDevice = panCoordNode->GetDevice (0);
+  Address address_panCoord = panCoordNetDevice->GetAddress ();
+  std::cout << address_panCoord << " ";
+
+  // Broadcast Address
+  Mac16Address mac16_brdcst ("ff:ff");
+
+  // FFDs
+  // Send File from FFD to pancoord during Brdcst link
+  Ptr<Node> ffd_one = ffds.Get (0); // 00:01
+  Ptr<NetDevice> ffd_one_netdev = ffd_one->GetDevice (0);
+  Ptr<Node> ffd_two = ffds.Get (1); // 00:02
+  Ptr<NetDevice> ffd_two_netdev = ffd_two->GetDevice (0);
+
+  // send to pancoord
+  lrWpanHelper.GenerateTraffic (ffd_one_netdev, address_panCoord, pktsize, 0.1, duration, interval);
+  lrWpanHelper.GenerateTraffic (ffd_two_netdev, address_panCoord, pktsize, 0.1, duration, interval);
+
+  //Enable PCAP and Ascii Tracing
+  AsciiTraceHelper ascii;
+  Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream ("tsch_scenario_collision.tr");
+  lrWpanHelper.EnablePcapAll (std::string ("tsch_scenario_collision"), true);
+  lrWpanHelper.EnablePcap (std::string ("tsch_scenario_collision"), panCoordNetDevice, true);
+  lrWpanHelper.EnableAsciiAll (stream);
+  if (verbose)
+    {
+      //lrWpanHelper.EnableLogComponents ();
+      // bool phy, bool csmaca, bool diverse
+      LogComponents(true, true, true);
+    }
+
+  // ------------------------------
+  Simulator::Run ();
+  Simulator::Destroy ();
+  return 0;
+}
+\end{lstlisting}

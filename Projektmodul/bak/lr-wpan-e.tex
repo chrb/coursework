@@ -1,0 +1,38 @@
+\subsection{IEEE 802.15.4e Amendment A: MAC sublayer} \label{Kap5-3}
+
+Um die Probleme von 802.15.4 zu beheben wurde die 802.15.4e Working Group geschaffen,
+welche das existierende MAC Protokoll verbessern sollte. Dadurch wurde
+der 802.15.4 Standard um zwei Kategorien an MAC Verbesserungen erweitert.
+Einmal den MAC Behavior Modes, welche spezifische Anwendungsbereiche verbessern,
+sowie General Functional Enhancements f"ur generelle Verbesserungen. Bei der Entwicklung
+wurden dabei viele Ideen aus bereits existierenden Standards wie WirelessHART und
+ISA 100.11.a "ubernommen.
+
+\begin{description}
+
+\item[General Functional Enhancements] \hfill \\
+  \begin{description}
+    \item[Information Elements IE] sind bereits seit der Grundversion implementiert,
+    "ubernehmen aber zus"atzliche Aufgaben im Amendment A.
+    \item[Enhanced Beacons EB] bilden eine Erweiterung zu Beacon Frames mit gr"osserer
+    Flexibili"at. Werden als anwendungsbezogene Beacons via IEs im TSCH Mode verwendet.
+
+    \item[Low Energy LE] Austausch der Eigenschaften niedrige Latenz durch
+    niedriger Energieverbrauch, wodurch das Ger"at immer erreichbar erscheint
+%      \item[Multipurpose Frame] addressiert mehrere MAC Operations
+%      \item[MAC Performance Metrics] stellen einen Mechanismus bereit um die
+%      Kanalqualit"at zu ermitteln, wird f"ur das Networking sowie h"ohere Schichten
+%      (6LoWPAN, RPL) ben"otigt.
+%      \item[Fast Assocation FastA] wird bei zeit-kritischen Systemen angewendet.
+  \end{description}
+
+  \item[Behavior Modes] \hfill \\
+
+    \begin{description}
+      \item[Timeslotted Channel Hopping TSCH] f"ur die Verbesserung von automatisierten
+      Anwendungsbereichen.
+      \item[Deterministic and Synchronous Multi-Channel Extension DSME] zur Unterst"utzung
+      von industriellen und kommerziellen Anwendungen, welche strikte Vorgaben
+      an Zeit und Verf"ugbarkeit stellen.
+    \end{description}
+\end{description}

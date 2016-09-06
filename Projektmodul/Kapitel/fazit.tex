@@ -1,0 +1,31 @@
+\section{Fazit und weiterf"uhrende Arbeiten} \label{Kap5-6}
+
+
+\subsection{Grober Entwicklungsplan}
+
+Anhand des Implementierungsstands m"ussen einige Entwicklungsarbeiten vorgenommen
+werden, damit der Network Formation Process durchgef"uehrt werden kann. Nachfolgend
+wird nun im Groben beschrieben was ein solcher Entwicklungsplan beinhaltet.
+
+\begin{enumerate}
+  \item Anpassen bzw. Neuentwicklung der Helpermethoden zur Erstellung
+  von beliebigen Schedules mit beliebigen Variablenwerten f"ur Slotframes, Timeslots,
+  ChannelOffset, SlotframeHandle mit den Linktypen Link, Advertisment Link und
+  Broadcast Link.
+  \item Analyse und Anpassung der aktuellen Grobstruktur der Information Elements
+  \item Einbettung der IEs in die Module zur aktiven Anwendung
+  \item Entwicklung von Helper Methoden zum Senden und Empfangen von IEs
+  \item Helper Methoden und Einbettung der konkreten IEs innerhalb des Network
+  Formation Process, wie in \ref{sec:Aufbau_Enhanced_Beacons} beschrieben
+  \begin{itemize}
+    \item Header IE Header
+    \item Payload IE Header
+    \item MLME-SubIE TSCH Synchronization
+    \item MLME-SubIE TSCH Timeslot
+    \item MLME-SubIE Channel Hopping
+    \item MLME-SubIE TSCH Slotframe and Link
+  \end{itemize}
+  \item Beispiel zur Anwendung der IEs
+  \item Implementierung des Advertisment Modes zum Aussenden der Enhanced Beacons
+  \item Anpassen des "'Bootstrapping"'-Algorithmus anhand der neuen Implementierung.
+\end{enumerate}

@@ -1,0 +1,63 @@
+%-----------------------------------------------------------------------------------
+% zweiseitige Kopf-Zeilen
+%-----------------------------------------------------------------------------------
+
+\usepackage[automark]{scrpage2}	% Seiten-Stil f\"ur scrartcl
+\pagestyle{scrheadings}		% Kopfzeilen nach scr-Standard
+\ifx\chapter\undefined 		% falls Kapitel nicht definiert sind
+  \automark[subsection]{section}% Kopf- und Fusszeilen setzen
+\else				% Kapitel sind definiert
+  \automark[section]{chapter}	% Kopf- und Fusszeilen setzen
+\fi
+
+%-----------------------------------------------------------------------------------
+%   Maske f\"ur \"Uberschrift
+%-----------------------------------------------------------------------------------
+% Belegung der notwendigen Kommandos f\"ur die Titelseite
+\newcommand{\autor}{Christoph Biesinger} 		% bearbeitender Student
+\newcommand{\veranstaltung}{Projektmodul} 	% Titel des ganzen Seminars
+\newcommand{\uni}{Institut f\"ur Informatik der Universit\"at Augsburg} % Universit\"at
+\newcommand{\lehrstuhl}{Kommunikationssysteme} % Lehrstuhl
+\newcommand{\semester}{}	% Winter- oder Sommersemester mit Jahr
+\newcommand{\datum}{} 			% Datumsabgabe
+\newcommand{\thema}{Analyse und Anwendung des Entwicklungsrepository ns-3-dev-TSCH}  		% Titel der Seminararbeit
+
+\newcommand{\ownline}{\vspace{.7em}\hrule\vspace{.7em}} % horizontale Linie mit Abstand
+
+\newcommand{\seminarkopf}{	% Befehl zum Erzeugen der Titelseite f\"ur kleinere Arbeiten
+				% wie Seminarausarbeiten und numerisches Praktikum
+ \textsc{\autor}  \hfill{\datum} \\
+\textbf{\veranstaltung} \\
+\uni \\
+\lehrstuhl \\
+\semester
+\ownline
+
+\begin{center}
+{\LARGE \textbf{\thema}}
+\end{center}
+\ownline\vspace{2em} \vspace{2em}
+\noindent
+\ownline
+
+}
+%-----------------------------------------------------------------------------------
+
+%-----------------------------------------------------------------------------------
+%   Maske f\"ur neuen Abschnitt
+%   nur bei f\"ur besondere Nummerierung notwendig,
+%   zum Beispiel wenn die Kapitelnummer nicht bei 1 starten soll
+%-----------------------------------------------------------------------------------
+\newcommand {\abschnitt} [2]		% \"Uberschriftenbefehl f\"ur eigene Nummerierungen
+{\setcounter{section}{#1}
+ \setcounter{theorem}{0}
+ \setcounter{equation}{0}
+ \vspace{4ex}
+ {\large \textbf{#1. #2}}
+\vspace{1ex}}
+
+
+% -----
+% Bilder
+% -----
+%\graphicspath{{./images/}}

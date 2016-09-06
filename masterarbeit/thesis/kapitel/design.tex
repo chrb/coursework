@@ -1,0 +1,370 @@
+\section{Design und Implementierung}
+\label{sec:design_implementierung}
+
+% ------------------------------------------------
+% Design
+% ------------------------------------------------
+
+
+\subsection{Gr"osse von Kontrollnachrichten}
+\label{subsec:di_ctrlmsg_length}
+
+Im Rahmen der Entwicklung des Algorithmus kam die urspr"ungliche Idee auf,
+die Kontrollnachrichten von LR-WPAN und RPL innerhalb eines Paketes zu senden,
+weshalb die Gr"osse von Enhanced Beacons und DODAG Information Objects analysiert
+wurden.
+
+% ------------------------------------------------
+
+\subsubsection{Enhanced Beacon}
+\label{subsubsec:di_eb}
+Nach Minimal-6TiSCH beinhaltet ein minimales Enhanced Beacon folgende Teile:
+
+Aufbau Enhanced Beacon
+\begin{enumerate}
+  \item Header IE Header
+  \item Payload IE Header
+  \item MLME-SubIE TSCH Synchronization
+  \item MLME-SubIE TSCH Timeslot
+  \item MLME-SubIE Ch. Hopping
+  \item MLME-SubIE TSCH Slotframe and Link
+\end{enumerate}
+
+% ------------------------------------------------
+\subsubsection{DODAG Information Objects}
+\label{subsubsec:di_dio}
+
+
+
+
+% ------------------------------------------------
+\subsection{L"osungsansatz}
+\label{subsec:di_loesungsansatz}
+
+
+Als L"osungsansatz werden wir eine strikte Trennung von Kontrollnachrichten und normalen
+Datentransfer vornehmen und im weiteren nur die Kontrollnachrichten betrachten.
+Diese werden nach der Idee von Orchestra in Trafficplanes mit eigener Slotframestruktur
+eingeteilt. Dadurch kann f"ur jede Kontrollnachricht in ihrer eigenen Trafficplane
+ein privater angepasster Schedule angewendet werden. Diese lokalen Trafficplanes
+werden anschliessend global auf die Slotframestruktur abgebildet, indem f"ur jede
+Kontrollnachricht eigene wiederkehrende Timeslots innerhalb des Slotframes festgelegt werden.
+Dadurch ergeben sich zwei Punkte, welche betrachtet werden m"ussen:
+\begin{enumerate}
+  \item der lokale Schedule zur Abarbeitung der Kontrollnachrichten durch Slotframestruktur
+  \item ein Algorithmus zur Einteilung des Timeslot- und Channel-Offset anhand der Trafficplanes.
+\end{enumerate}
+
+Dieser Algorithmus soll dabei m"oglichst autonom in abh"angigkeit zur Topologie
+die Erstellung der Slotframestruktur organisieren. Daf"ur wird beim Scheduling
+des Timeslot-Offsets ein Konzept aus DeTAS verwendet, indem zwischen den Trafficplanes
+gewechselt wird (bsp. mit 3 Trafficplanes Enhanced Beacons EB, DODAG Information Object DIO,
+Unicast RPL Nachrichten DOA, DIS: EB -> DIO -> DOA/DIS -> EB -> DIO -> ...)
+Eine solche einmalige Zusammenfassung der Kontrollnachrichten bezeichnen wir
+fortan als Controlmessagestack CMS.
+
+% ------------------------------------------------
+\subsubsection{Eigenschaften}
+\label{subsubsec:di_eigenschaften}
+
+
+\begin{itemize}
+  \item dezentraler, dynamisches Scheduling der Kontrollnachrichten
+  \item Austausch der Informationen durch zus"atzliche Steuerungsmeldungen
+  eingebettet in den Kontrollnachrichten
+  \item Trennung der Kontrollnachrichten zum Datentransfer
+  \item Dedizierter Bereich pro Technologie und Kontrollnachricht (Enhanced Beacons, DODAG Information Object,
+  DODAG Information Solicitation / Destination Advertisement Object)
+\end{itemize}
+
+-dezentraler Ansatz durch Versenden zus"atzlicher Steuerungsmeldungen
+welche in den Kontrollnachrichten der Technologien eingebettet sind.
+IEEE 802.15.4e TSCh -> EB
+RPL -> DIO
+RPL -> DIS/DAO
+
+-trennung kontrollnachrichten und datentransfer
+-eigener plane pro kontrollnachricht (eb, dio, dao/dis)
+-konfliktfreier schedule fuer kontrollnachrichten
+
+ Damit wird der globale Schedule von TSCH
+-feste Frequenz innerhalb eines slotframes
+-Timeslot Bitmap zur Angabe des lokalen Schedules
+-selbstst"andige Konflikte
+
+
+
+
+\begin{itemize}
+  \item Gr"osse des EB Bereichs N\_EB
+    \begin{itemize}
+      \item N\_EB hat in allen Bereichen des Netzwerks als globale Gr"osse
+      den gleichen Wert. Der Wert entspricht dabei der h"ochsten Netzwerkdichte + 1
+      \item N\_EB hat einen variablen Wert und ist ab"hangig von der Netzwerkdichte
+      in dem jeweiligen Teilbereichen des Netzwerkes.
+    \end{itemize}
+  \item Auswahl der Frequenz
+    \begin{itemize}
+      \item F"ur die Kontrollnachrichten wird pro Slotframe eine feste Frequenz vorgegeben
+      und nur die beteiligten Links k"onnen f"ur die Kontrollnachrichten verwendet werden.
+      Dadurch sind die Planes
+    \end{itemize}
+
+  \item Linkauswahl
+    \begin{itemize}
+      \item Die Linkauswahl wird nach dem Zufallsprinzip ausgew"ahlt.
+      \item Der erste freie Link wird verwendet.
+    \end{itemize}
+
+\end{itemize}
+
+% ------------------------------------------------
+\subsubsection{Ablaufplan}
+\label{subsubsec:di_ablaufplan}
+
+\begin{description}
+  % Netzwerkaufbau
+  \item [Netzwerkaufbau] Ablauf beim ersten Aufbau eines Netzwerkes und den
+  ben"otigten Schritten zus"atzlich zum normalen Prozess
+  \begin{enumerate}
+    \item Knoten schaltet auf TSCH Mode ein
+    \item Knoten initialisiert Network Formation Data Plane anhand Standard
+    \item Knoten sendet Enhanced Beacon mit TSCH Network Formation Schedule Information Element
+  \end{enumerate}
+
+  % Netzwerkbeitritt
+  \item [Netzwerkbeitritt] Prozess eines Knoten, welcher einem bestehenden
+  PAN beitretet
+  \begin{enumerate}
+    \item Knoten empf"angt EB
+    \item Knoten h"ort nach Regel [2] und [3] \ref{subsubsec:di_regeln}
+    \item Analyse aller TSCH Network Formation Schedule IE aus erhaltenen EBs
+    \begin{enumerate}
+      \item Lege Kontrollnachrichtenfrequenz mit momentan verwendeter Frequenz fest
+      \item Berechne weitere Links mit gleicher Kontrollnachrichtenfrequenz
+      innerhalb des vorgegeben EB Bereich N\_EB
+    \end{enumerate}
+    \item Setze Links in TS Bitmap anhand TSCH Network Formation Schedule IE
+    \item W"ahle einen freien Link nach dem Zufallsprinzip als Sendeslot aus
+    \item Erweitere N\_EB um 1
+    \item Belege eigene TS Bitmap anhand Regel [4] \ref{subsubsec:di_regeln}
+    \item Empfange Links innerhalb N\_EB
+    \item Sende eigenes Enhanced Beacon im n"achsten Slotframe und belegten Timeslot
+  \end{enumerate}
+\end{description}
+
+% ------------------------------------------------
+\subsubsection{Kollisionsbehandlung}
+\label{subsubsec:di_kollisionsbehandlung}
+
+Im Rahmen des Schedules k"onnen zwei Arten der Kollision festgestellt werden,
+einmal die Kollision unterhalb und die Kollision oberhalb. Die Kollision unterhalb
+tritt haupts"achlich im Rahmen des Network Formation Prozess auf, wenn zwei Kindknoten
+gleichzeitig sich an einen Parentknoten binden wollen. Die Kollision oberhalb
+erscheint, wenn ein Kindknoten sich an zwei Parentknoten binden m"ochte. Dieser
+Kollisionstyp erscheint nur, wenn der Bereich der Kontrolnachrichten anhand der
+lokalen Netzwerkdichte ermittelt wird.
+
+\begin{description}
+
+  \item [Kollision unterhalb] Hierbei erkennt ein Parentknoten, dass zwei oder
+  mehr Kindknoten den gleichen Timeslot verwenden wollen, dabei reagieren sowohl
+  Parentknoten und Kindknoten unterschiedlich.
+  \begin{lstlisting}[frame=single]
+  // Platzhalter
+  //     n0
+  //    /  \
+  //  n1    n2
+  //
+  // Bitmaps fuer n0
+  // 1.SF: 10
+  // 2.SF: 1C
+  // 3.SF: 1000
+  // 4.SF: 1110 (n1 und n2 haben zufaellig Timeslot 2 und 3 ausgewaehlt)
+  \end{lstlisting}
+  %
+  \begin{description}
+    % Parentknoten
+    \item [Aktionen durch Parentknoten]
+    %
+    \begin{enumerate}
+      \item Parentknoten empf"angt innerhalb eines freien Timeslot mehrere Enhanced Beacons
+      und erkennt damit eine Kollision
+      \item erweitere N\_EB um 2
+      \item belege Timeslot Bitmap anhand Regel [4] \ref{subsubsec:di_regeln} (Timeslot wird nicht markiert)
+      \item setze Pending Flag
+      \item sende eigenes Enhanced Beacon zum n"achsten Zeitpunkt
+    \end{enumerate}
+    %
+\begin{lstlisting}[frame=single]
+                    1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|ID = 0x1a|1|0|0| Len = 4       |1 0 0 0 0 0 0 0|     ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+\end{lstlisting}
+
+    % Kindknoten
+    \item [Aktionen durch Kindknoten] Der Kindknoten empf"angt weitere
+    Enhanced Beacons von Parentknoten
+    %
+    \begin{enumerate}
+      \item Knoten empf"angt Enhanced Beacon von Parentknoten
+      \item Analyse TSCH Network Formation Schedule Information Element
+      %
+      \begin{enumerate}
+        \item Betrachte Timeslot Bitmap
+        %
+        \begin{enumerate}
+          \item Wenn eigener Timeslot markiert ist war die Kommunikation erfolgreich
+          und der Link wird behalten
+          \item Wenn eigener Timeslot nicht markiert ist, fand eine Kollision mit
+          fremden Knoten statt
+          %
+          \begin{enumerate}
+            \item Setze Pending Flag
+            \item W"ahle einen freien Link nach dem Zufallsprinzip aus
+          \end{enumerate}
+          %
+          \item Wenn kein weiterer freier Timeslot zum Beitreten eines Knoten
+          vorhanden ist, wird N\_EB um 1 erweitert
+          \item Setze Timeslot Bitmap anhand Regel [4] \ref{subsubsec:di_regeln}
+        \end{enumerate}
+        %
+      \end{enumerate}
+      %
+    \item Sende eigenes Enhanced beacon zum n"chstm"oglichen Zeitpunkt
+  \end{enumerate}
+  %
+  \end{description}
+  %
+  % Kollision oberhalb
+  \item [Kollision oberhalb] Ein Kindknoten will eine Verbindung mit zwei Parentknoten
+  erstellen, erkennt aber anhand den angebotenen Timeslots, dass immer eine Kollision
+  mit dem jeweils anderen Parentknoten auftreten wird.
+
+  \begin{lstlisting}[frame=single]
+  // Platzhalter
+  //     n0
+  //    /  \
+  //  n1    n2
+  //    \  /
+  //     n3
+  //
+  // Bitmaps
+  // n0: 1110
+  // n1: 110
+  // n2: 101
+  // n1 und n2 im weiteren Parentknoten PK, n3 Kindknoten KK
+  \end{lstlisting}
+  \begin{description}
+  \item [Aktion des Kindknoten]
+    \begin{enumerate}
+      \item Kindknoten empf"angt Enhanced Beacons von mehreren Parentknoten
+      \item Analyse TSCH Network Formation Schedule Information Element
+      \begin{enumerate}
+        \item Betrachte Timeslot Bitmap
+        \item Initialisiere interne Bitmap anhand den Werten des ersten Parentknoten
+        \item Vergleiche Werte von anderen Parentknoten f"ur jeden Timeslot
+        \begin{enumerate}
+          \item Wenn interner Bitmap den Wert 1 anzeigt und der neue Wert ebenfalls
+          eine 1 anzeigt "'andert sich der Wert nicht.
+          \item Wenn interne Bitmap den Wert 1 anzeigt und der neue Wert den Wert 0
+          aufweist, wird der Timeslot gesondert markiert.
+          \item Wenn interne Bitmap den Wert 0 aufweist und der neue Wert den Wert 1,
+          wird der Timeslot gesondert markiert.
+          \item Wenn interne Bitmap den Wert 0 hat und der neue Wert ebenfalls
+          den Wert 0, tritt keine "'Anderung auf.
+        \end{enumerate}
+        \item Wenn der Wert 0 vorhanden, findet keine Kollision oberhalb statt,
+        weshalb der Timeslot ausgew"ahlt werden kann und eigenes Enhanced Beacon
+        mit Bitmap gesendet werden kann
+        \item Wenn der Wert 0 nicht vorhanden, werden an alle gesondert markierten
+        Timeslots ein Enhanced Beacon mit aktiven Pending Flag und Bitmap gesendet.
+      \end{enumerate}
+    \end{enumerate}
+  \item [Aktion der Parentknoten]
+    \begin{enumerate}
+      \item Parentknoten erh"aelt Enhanced Beacon von Kindknoten mit Pending Flag
+      \item Parentknoten erweitert N\_EB um 1
+      \item Parentknoten sendet Enhanced Beacon zum n"achstm"oglichen Zeitpunkt
+    \end{enumerate}
+  \end{description}
+\end{description}
+
+
+% ------------------------------------------------
+\subsubsection{Regeln}
+\label{subsubsec:di_regeln}
+Im Rahmen des Algorithmus m"ussen die Knoten einige Regeln beachten.
+
+\begin{enumerate}
+  \item Die Kommunikation der Kontrollnachrichten wird innerhalb eines
+  Slotframes nur auf einer festen Frequenz erfolgen, womit eine begrenzte Anzahl
+  an m"oglichen Links festgelegt werden. Nach dem Slotframe wird die Frequenz
+  durch den normalen Channel Hopping Prozess ge"andert. Diese Frequenz wird vortan
+  als Kontrollnachrichtenfrequenz.
+  \item Vor der Aktivierung des TSCH Mode muss ein Knoten zwei Slotframes
+  auf weitere Enhanced Beacons warten um weitere potentzielle Parentknoten
+  empfangen zu k"onnen.
+  \item Ein Knoten h"ort weitere Slotframes auf Enhanced Beacons, solange ein
+  Parentknoten zwei aufeinanderfolgende Enhanced Beacons mit inaktivem Pending Flag
+  sendet.
+  \item Ein Feld auf der Timeslot Bitmap, innerhalb des TSCH Network Formation Schedule IE,
+  wird markiert, wenn der Knoten selber oder ein direkter Nachbar den Timeslot
+  zum Senden seines Enhanced Beacon verwendet. Das Feld wird nicht markiert,
+  wenn dementsprechend der Knoten oder ein direkter Nachbar nicht auf dem Timeslot
+  sendet oder der Knoten eine Kollision auf dem Timeslot erkannt hat.
+\end{enumerate}
+
+% ------------------------------------------------
+\subsubsection{TSCH Network Formation Schedule Information Element}
+\label{subsubsec:di_nfsie}
+
+Eigenes Information Element
+
+\begin{lstlisting}[frame=single]
+
+                    1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|Sched-Id |P|T|C| Length TSBM   |   TS Bitmap   | Channel Bitmap
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| (opt.)        |
++-+-+-+-+-+-+-+-+
+\end{lstlisting}
+
+\begin{description}
+  \item [Schedule-ID] (5 Bit) Nummer (0x00 - 0x1f) welche einem Kontrollplane eindeutig
+  zugeordnet wird und diesen einleitet
+    \begin{center}
+      \begin{tabular}{ |l|l| }
+        \hline
+        Bereich & Beschreibung \\ \hline
+        0x00 - 0x19 & nicht verwendet \\ \hline
+        0x1a & Enhanced Beacons \\ \hline
+        0x1b & DIO-Nachrichten \\ \hline
+        0x1c & DIO/DIS-Nachrichten \\ \hline
+        0x1d - 0x1f & nicht verwendet \\
+        \hline
+      \end{tabular}
+    \end{center}
+  \item [Pending Flag] (1 Bit) ein aktives Pending Flag zeigt an, dass der Schedule momentan
+  nicht fest zugeordnet ist und noch Probleme ausstehen (Kollision)
+  \item [Type Flag] (1 Bit) Beschreibt die L"ange der TS Bitmap
+    \begin{center}
+      \begin{tabular}{|l|l|l|l|}
+        \hline
+        Flag & Typ & Beschreibung & M"ogliche Timeslots \\ \hline
+        0 & Short Length & L"ange der TS Bitmap sind 8 Bit & 256 \\ \hline
+        1 & Long Length & L"ange der TS Bitmap sind 16 Bit & 65536 \\
+        \hline
+      \end{tabular}
+    \end{center}
+  \item [Channel Flag] (1 Bit) liefert den Hinweis "'uber eine aktive Channel Bitmap
+  \item [Length TSCH Network Formation Schedule Information Element] (1/2 Byte)
+  beschreibt die Gr"osse der Timeslot Bitmap
+  \item [Timeslot Bitmap] (variable vielfache von 8 Bit) Liefert die Belegung des lokalen
+  Schedules
+  \item [Channel Bitmap] (16 Bit) optionale Bitmap, zur Angabe der aktiven Channel Offsets
+\end{description}

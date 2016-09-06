@@ -1,0 +1,69 @@
+\documentclass[paper=a4, 	% Seitenformat
+		fontsize=11pt, 		% Schriftgr\"o\ss{}e
+ 		bibtotoc, 	% Literaturverzeichnis in das Inhaltsverzeichnis
+% 		bibtotocnumbered, % Literaturverzeichnis mit Nummer in das Inhaltsverzeichnis
+%		twoside, 	% doppelseitig
+% 		idxtotoc, 	% Index in das Inhaltsverzeichnis
+		abstracton, 	% mit Abstrakt
+		headsepline, 	% Trennlinie f\"ur die Kopfzeile
+		%footnosepline,	% Trennlinie f\"ur die Fu\ss{}zeile
+		notitlepage	% keine extra Titelseite
+		]{scrartcl}
+%------------------------------------------------------------------------
+
+
+\input{Header/kopf}			% Befehle und Pakete f\"ur Titel
+\input{Header/theorem}			% Mathematische Befehle und Pakete
+\input{Header/rest}			% restliche Befehle und Pakete
+\input{Header/referenz}			% restliche Befehle und Pakete
+
+\numberwithin{figure}{section}	% Abbildungsnummern in Section
+
+\begin{document}		% Start des Dokuments
+
+\ownautorefnames		% \"Anderung einiger automatischen Texte von hyperref
+\parindent0em 			% kein Einzug nach einer Leerzeile
+
+\thispagestyle{empty}		% leerer Seitenstil, also keine Seitennummer
+
+\begin{titlepage}
+\seminarkopf 			% Titelblatt
+
+\input{Kapitel/abstrakt}
+
+\end{titlepage}
+				% \newpage streckt den Inhalt der aktuellen Seite auf die ganze Seite
+\tableofcontents		% Inhaltsverzeichnis
+%\listoffigures			% Abbildungsverzeichnis
+%\listoftables			% Tabellenverzeichnis
+
+\clearpage
+
+\input{Kapitel/grundlagen}
+\vspace{5em}
+
+\input{Kapitel/tsch}
+\vspace{5em}
+
+\input{Kapitel/networkformation.tex}
+\vspace{5em}
+
+\input{Kapitel/funk_repo}
+\vspace{5em}
+
+\input{Kapitel/script}
+\vspace{5em}
+
+\input{Kapitel/fazit}
+\vspace{5em}
+
+\clearpage
+
+%\appendix                       % Start des Anhangs
+
+\input{Kapitel/appendix-a}
+
+%\clearpage
+
+\printbibliography
+\end{document}			% Ende des Dokuments

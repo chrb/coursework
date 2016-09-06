@@ -1,0 +1,63 @@
+\section{Grundlagen}
+\label{sec:Grundlagen}
+% ------------------------------------------------
+% TSCH
+% ------------------------------------------------
+\subsection{IEEE 802.15.4e Timeslotted Channel Hopping}
+\label{subsec:grundlagen_tsch}
+
+\subsubsection{Time Divison Multiple Access TDMA}
+\label{subsubsec:grundlagen_tdma}
+
+\subsubsection{Enhanced Beacons und Information Elements}
+\label{subsubsec:grundlagen_tsch_eb_ie}
+
+\subsubsection{Network Formation Prozess}
+\label{subsubsec:grundlagen_tsch_networkformation}
+% ------------------------------------------------
+% RPL
+% ------------------------------------------------
+\subsection{Routing Protocol for Low-Power and Lossy Networks RPL}
+\label{subsec:grundlagen_rpl}
+
+\subsubsection{Kontrollnachrichten}
+\label{subsubsection:grundlagen_rpl_kontrollnachrichten}
+
+DIO
+
+\begin{lstlisting}[frame=single]
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| RPLInstanceID |Version Number |             Rank              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|G|0| MOP | Prf |     DTSN      |     Flags     |   Reserved    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                            DODAGID                            +
+|                                                               |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   Option(s)...
++-+-+-+-+-+-+-+-+
+\end{lstlisting}
+
+DAO
+
+DIS
+
+\subsubsection{Network Formation Prozess}
+\label{subsubsec:grundlagen_rpl_networkformation}
+
+
+% ------------------------------------------------
+% Contik/Cooja
+% ------------------------------------------------
+\subsection{Contiki}
+\label{subsec:grundlagen_contiki}
+
+\subsubsection{Cooja}
+\label{subsubsec:grundlagen_cooja}

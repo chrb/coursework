@@ -1,0 +1,32 @@
+\usepackage{array}		% erweiterte Tabellen
+\usepackage{alltt}
+
+% Schriftzeichen, Format
+\usepackage{latexsym}		% Latex-Symbole
+\usepackage[latin1]{inputenc}	% Eingabekodierungen
+\usepackage[english,ngerman]{babel}	% Mehrsprachenumgebung
+
+% Layout
+\usepackage{setspace}                   % Zeilenabstand
+\usepackage{soul}                       % Unterstreichen mit Zeilenumbruch \ul{}
+\usepackage{color}                      % Farben
+\usepackage[right,official]{eurosym}    % Euro Symbol
+
+% Bilder
+\usepackage[final]{graphicx}            % Graphiken einbinden
+
+\usepackage{caption}                    % Beschriftungen
+\usepackage{subcaption}                 % Beschriftungen f\"ur Unterteilung
+ \DeclareCaptionLabelFormat{contq}{#1~#2 (Fortsetzung)} % Fortgesetzte Umgebungen
+ \captionsetup[ContinuedFloat]{labelformat=contq} % Fortgesetzte Umgebungen
+ \captionsetup[longtable]{position=bottom}  % Beschriftungen unterhalb
+ \captionsetup{format=hang}             % Platz unter dem Bezeichner und dem Trenner bleibt leer
+
+%\psset{RightAngleType=german,comma=true} % Komma als Dezimalzeichen
+% deutscher rechter Winkel
+
+
+% Weitere Befehle
+\newcommand{\gedanke}{-- }              % Gedankenstriche
+\newcommand{\anfzeichen}[1]{"`#1"'}     % Anf\"uhrungszeichen
+\newcommand{\define}[1]{\textit{#1}}    % Als neue Definition kennzeichnen

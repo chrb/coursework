@@ -1,0 +1,76 @@
+\section{Networksimulator ns-3} \label{Kap5-5}
+
+Im Laufe der Projekts wird der Netzwerksimulator ns-3 verwendet, dabei
+kann die Grobbeschreibung direkt von dem Internetauftritt unter
+\href{http://www.nsam.org}{http://www.nsam.org} entnommen werden.
+
+\begin{alltt}
+ns-3 is a discrete-event network simulator for Internet systems,
+targeted primarily for research and educational use.
+ns-3 is free software, licensed under the GNU GPLv2 license,
+and is publicly available for research, development, and use.
+\end{alltt}
+
+ns-3 ist konzipiert als eine Sammlung von Software-Bibliotheken, welche zusammen
+ein System bilden. Diese einzelnen Bibliotheken werden als Module bezeichnet
+und implementieren jeweils einen eigenen Standard, welche auf den Kernmodulen
+aufbauen. Dadurch k"onnen Benutzerprogramme durch Verwendung dieser Module
+aufgebaut werden.
+
+Wir gehen im weiteren davon aus, dass der Leser mit ns-3 vertraut ist,
+falls nicht, kann das mit Hilfe des \href{https://www.nsnam.org/ns-3-24/documentation/}{Tutorial}
+nachgeholt werden.
+
+%----------------------------------------------
+\subsection{LR-WPAN Modul}
+
+Im Verlauf dieser Arbeit wurde haupts"achlich das LR-WPAN Modul angewendet, welches
+in der offiziellen ns-3 Version (NS-3.24) den IEEE 802.15.4.e Standard mitsamt
+dessen Funktionalit"aten und Hilfsanwendungen implementiert.
+
+Der Auf
+
+F"ur diese Arbeit ist dabei das Lr-Wpan Modul wichtig, welches im aktueller Version
+(NS-3.24) den 802.15.4 Standard mitsamt seiner Funktionalit"aten implementiert.
+Der Aufbau des Modul entspricht dabei sehr stark dem IEEE Standard.
+
+Der Aufbau der Implementierung erfolgt dabei nach NS3 Standard und entspricht
+den Ordnern \textit{models}, \textit{examples}, \textit{helper} und \textit{test}.
+Im besonderen ist der Ordner \textit{models} zu betrachten, da dieser die Implementierung
+des Standards enth"alt.
+
+F"ur eine genauere Beschreibung und allgemeine Informationen zur Arbeit und
+Entwicklung im Rahmen des LR-WPAN Moduls kann auf die Arbeit von
+Nikica Krezic-Luger\cite{bachelorarbeit} verwiesen werden.
+
+%----------------------------------------------
+\subsection{TSCH Erweiterung}
+
+Durch das Amendment A auf Version 802.15.4e muss auch ns-3 um die neuen
+Funktionen erweitert werden. Daf"ur wurde mit einem Projekt begonnen, welches
+im Januar 2015 zu einem ersten gro"sen Commit f"uhrte. Dieser wurde anschlie"send
+f"ur eine Codereview freigestellt und kann in Github unter
+\href{https://github.com/EIT-ICT-RICH/ns-3-dev-TSCH}{ns-3-dev-TSCH}
+gefunden werden.
+
+Dieser Commitstand umfasst dabei laut der
+\href{http://mailman.isi.edu/pipermail/ns-developers/2015-January/012459.html}{Ver"offentlichsmeldung}
+folgende Funktionen:
+
+\begin{itemize}
+  \item Wechsel von Standard 802.15.4 auf den TSCH Mode, w"ahrend der Kommunikation
+  \item das Energy Model
+  \item multi-path fading modeling (FadingBias)
+\end{itemize}
+
+Diese und weitere Funktionen f"uhrten zu "Anderungen innerhalb des LR-WPAN Models,
+haupts"achlich innerhalb des lr-wpan-mac Models sowie durch die Hinzunahme
+der weiteren Models
+
+\begin{itemize}
+  \item lr-wpan-array
+  \item lr-wpan-tsch-mac
+  \item lr-wpan-tsch-net-device
+\end{itemize}
+
+%----------------------------------------------
